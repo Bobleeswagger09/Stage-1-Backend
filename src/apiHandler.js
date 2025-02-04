@@ -1,45 +1,55 @@
-//  Responsible for  implementing the core logic for handling the classification of the number and sending the response.
-
+// src/controllers/numberController.js
 const {
   isPrime,
-  isPerfect,
   isArmstrong,
-  isOdd,
-  digitSum,
-} = require("./src/utils");
-const { getFunFact } = require("./d/funFactService");
+  sumOfDigits,
+  getFunFact,
+} = require("../utils/numberUtils");
 
-async function classifyNumber(req, res) {
+const classifyNumber = async (req, res) => {
   const { number } = req.query;
 
-  // Validate if the input is a valid number
+  // Input validation: must be a number
   if (isNaN(number)) {
-    return res.status(400).json({ error: true, number });
+    return res.status(400).json({ number, error: true });
   }
 
   const num = parseInt(number);
+
+  // Calculate properties
+  const is_prime = isPrime(num);
+  const is_perfect = num === sumOfDigits(num); // (Note: Perfect number logic may need adjustment)
   const properties = [];
-
-  // Check properties
   if (isArmstrong(num)) properties.push("armstrong");
-  if (isOdd(num)) properties.push("odd");
-  if (!isArmstrong(num) && !isOdd(num)) properties.push("even");
+  properties.push(num % 2 === 0 ? "even" : "odd");
 
-  // Get fun fact about the number
-  const funFact = await getFunFact(num);
+  const digit_sum = sumOfDigits(num);
 
-  // Response object
-  const response = {
-    number: num,
-    is_prime: isPrime(num),
-    is_perfect: isPerfect(num),
-    properties: properties,
-    digit_sum: digitSum(num),
-    fun_fact: funFact,
-  };
+  try {
+    let fun_fact = await getFunFact(num);
 
-  // Send response
-  res.status(200).json(response);
-}
+    // If the number is Armstrong, override the fun fact with a custom message.
+    if (isArmstrong(num)) {
+      // Generate the explanation text dynamically:
+      const digits = num.toString().split("");
+      // Create a string like "3^3 + 7^3 + 1^3" for the given number.
+      const poweredDigits = digits
+        .map((d) => `${d}^${digits.length}`)
+        .join(" + ");
+      fun_fact = `${num} is an Armstrong number because ${poweredDigits} = ${num}`;
+    }
+
+    return res.status(200).json({
+      number: num,
+      is_prime,
+      is_perfect,
+      properties,
+      digit_sum,
+      fun_fact,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: "Error fetching fun fact." });
+  }
+};
 
 module.exports = { classifyNumber };

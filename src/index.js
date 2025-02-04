@@ -11,7 +11,7 @@ app.use(bodyParser.json());
 
 // Root route: Redirect to /api/classify-number?number=9
 app.get("/", (req, res) => {
-  res.redirect("/api/classify-number?number=9");
+  res.redirect("/api/classify-number?number=371");
 });
 
 // Mount routes under /api
