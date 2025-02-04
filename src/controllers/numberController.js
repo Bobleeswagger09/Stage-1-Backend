@@ -14,17 +14,23 @@ const classifyNumber = async (req, res) => {
     return res.status(400).json({ number, error: true });
   }
 
-  const num = parseInt(number);
+  const num = parseInt(number, 10);
 
   // Calculate number properties
   const is_prime = isPrime(num);
-  const is_perfect = num === sumOfDigits(num);
+
+  // Ensure that 0 (or negative) is not classified as perfect.
+  // Note: This logic uses sumOfDigits to check "perfect", but typically,
+  // perfect numbers are defined as numbers equal to the sum of their proper divisors.
+  // Here, we follow the provided logic and add a check that num must be > 0.
+  const is_perfect = num > 0 && num === sumOfDigits(num);
+
   const properties = [];
   if (isArmstrong(num)) properties.push("armstrong");
-  if (num % 2 === 0) properties.push("even");
-  else properties.push("odd");
+  properties.push(num % 2 === 0 ? "even" : "odd");
 
-  const digit_sum = sumOfDigits(num);
+  // For digit_sum, use the absolute value so that negative inputs are handled properly.
+  const digit_sum = sumOfDigits(Math.abs(num));
 
   // Get fun fact from Numbers API
   try {
